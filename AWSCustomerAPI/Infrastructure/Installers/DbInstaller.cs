@@ -8,14 +8,14 @@ using Amazon.SecurityToken;
 using AWSCustomerAPI.Models.Repositories;
 using Amazon.Runtime.CredentialManagement;
 using System.Net;
+using Microsoft.Extensions.Configuration;
 
 namespace AWSCustomerAPI.Installers
 {
     public class DbInstaller : IInstaller
     {
         public void InstallServices(IServiceCollection services, IConfiguration configuration)
-        {
-           
+        {        
             var roleArnToAssume = "arn:aws:iam::319941658928:role/JasonRole_AppDynamoDbAccess";
             var stsClient = new AmazonSecurityTokenServiceClient(LoadSsoCredentials(), RegionEndpoint.EUWest1);
 
@@ -28,7 +28,7 @@ namespace AWSCustomerAPI.Installers
             // Create the request to use with the AssumeRoleAsync call.
             var assumeRoleReq = new AssumeRoleRequest()
             {
-                DurationSeconds = 3600,
+                DurationSeconds = 900,
                 RoleSessionName = "Session1",
                 RoleArn = roleArnToAssume
             };
@@ -37,6 +37,13 @@ namespace AWSCustomerAPI.Installers
             //var assumeRoleRes = new AssumeRoleAWSCredentials(defaultCreds, roleArnToAssume, "Session1", new AssumeRoleAWSCredentialsOptions { DurationSeconds = 3600 });
 
             var assumeRoleRes = stsClient.AssumeRoleAsync(assumeRoleReq).Result;
+
+            var awsOptions = configuration.GetAWSOptions();
+            awsOptions.Credentials = assumeRoleRes.Credentials;
+            awsOptions.SessionRoleArn = roleArnToAssume;
+            awsOptions.SessionName = "Session1";
+            awsOptions.Region = RegionEndpoint.USEast1;
+            services.AddDefaultAWSOptions(awsOptions);
 
             /*
                         // Now create a new client based on the credentials of the caller assuming the role.
@@ -47,13 +54,14 @@ namespace AWSCustomerAPI.Installers
                         Console.WriteLine($"AssumedRole Caller: {caller2.Arn}");
             */
 
-            var config = new AmazonDynamoDBConfig()
+            var dbConfig = new AmazonDynamoDBConfig()
             {
                 RegionEndpoint = RegionEndpoint.USEast1,
                 AllowAutoRedirect = true                 
             };
 
-            var client = new AmazonDynamoDBClient(assumeRoleRes.Credentials, config);
+            var client = new AmazonDynamoDBClient(assumeRoleRes.Credentials, dbConfig);
+
             //var client = new AmazonDynamoDBClient(assumeRoleRes, config);
 
             //Working
@@ -64,7 +72,8 @@ namespace AWSCustomerAPI.Installers
             //var client = new AmazonDynamoDBClient(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY);
 
 
-            services.AddSingleton<IAmazonDynamoDB>(client); 
+            //services.AddSingleton<IAmazonDynamoDB>(client);
+            services.AddAWSService<IAmazonDynamoDB>();
             services.AddScoped<ICustomerRepository, CustomerRepository>();
 
             services.AddLogging(loggingBuilder =>
