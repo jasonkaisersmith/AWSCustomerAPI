@@ -17,7 +17,7 @@ namespace AWSCustomerAPI.Installers
         {
            
             var roleArnToAssume = "arn:aws:iam::319941658928:role/JasonRole_AppDynamoDbAccess";
-            //var stsClient = new AmazonSecurityTokenServiceClient(LoadSsoCredentials(), RegionEndpoint.EUWest1);
+            var stsClient = new AmazonSecurityTokenServiceClient(LoadSsoCredentials(), RegionEndpoint.EUWest1);
 
             /*
             // Get and display the information about the identity of the default user.
@@ -33,10 +33,10 @@ namespace AWSCustomerAPI.Installers
                 RoleArn = roleArnToAssume
             };
 
-            var defaultCreds = FallbackCredentialsFactory.GetCredentials();
-            var assumeRoleRes = new AssumeRoleAWSCredentials(defaultCreds, roleArnToAssume, "Session1", new AssumeRoleAWSCredentialsOptions { DurationSeconds = 3600 });
+            //var defaultCreds = FallbackCredentialsFactory.GetCredentials();
+            //var assumeRoleRes = new AssumeRoleAWSCredentials(defaultCreds, roleArnToAssume, "Session1", new AssumeRoleAWSCredentialsOptions { DurationSeconds = 3600 });
 
-            //var assumeRoleRes = stsClient.AssumeRoleAsync(assumeRoleReq).Result;
+            var assumeRoleRes = stsClient.AssumeRoleAsync(assumeRoleReq).Result;
 
             /*
                         // Now create a new client based on the credentials of the caller assuming the role.
@@ -53,8 +53,8 @@ namespace AWSCustomerAPI.Installers
                 AllowAutoRedirect = true                 
             };
 
-            //var client = new AmazonDynamoDBClient(assumeRoleRes.Credentials, config);
-            var client = new AmazonDynamoDBClient(assumeRoleRes, config);
+            var client = new AmazonDynamoDBClient(assumeRoleRes.Credentials, config);
+            //var client = new AmazonDynamoDBClient(assumeRoleRes, config);
 
             //Working
             //var client = new AmazonDynamoDBClient(LoadSsoCredentials(), config);
@@ -78,10 +78,13 @@ namespace AWSCustomerAPI.Installers
         static AWSCredentials LoadSsoCredentials()
         {
             var chain = new CredentialProfileStoreChain();
-            if (!chain.TryGetAWSCredentials("319941658928_SSO-Consumer-admin", out var credentials))
-                throw new Exception("Failed to find the profile");
-
-            return credentials;
+            if (chain.TryGetAWSCredentials("319941658928_SSO-Consumer-admin", out var credentials))
+                return credentials;
+            else
+            {
+                var defaultCreds = FallbackCredentialsFactory.GetCredentials();
+                return defaultCreds == null ? throw new Exception("Failed to find the profile") : defaultCreds;
+            }
         }
     }
 }
