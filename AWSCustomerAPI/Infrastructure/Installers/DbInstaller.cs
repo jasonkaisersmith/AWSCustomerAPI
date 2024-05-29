@@ -14,9 +14,10 @@ namespace AWSCustomerAPI.Installers
     public class DbInstaller : IInstaller
     {
         public void InstallServices(IServiceCollection services, IConfiguration configuration)
-        {            
+        {
+           
             var roleArnToAssume = "arn:aws:iam::319941658928:role/JasonRole_AppDynamoDbAccess";
-            var stsClient = new AmazonSecurityTokenServiceClient(LoadSsoCredentials(), RegionEndpoint.EUWest1);
+            //var stsClient = new AmazonSecurityTokenServiceClient(LoadSsoCredentials(), RegionEndpoint.EUWest1);
 
             /*
             // Get and display the information about the identity of the default user.
@@ -32,26 +33,28 @@ namespace AWSCustomerAPI.Installers
                 RoleArn = roleArnToAssume
             };
 
-            //Task.Delay(5); //Wait for it to take effect??
-            var assumeRoleRes = stsClient.AssumeRoleAsync(assumeRoleReq).Result;
+            var defaultCreds = FallbackCredentialsFactory.GetCredentials();
+            var assumeRoleRes = new AssumeRoleAWSCredentials(defaultCreds, roleArnToAssume, "Session1", new AssumeRoleAWSCredentialsOptions { DurationSeconds = 3600 });
 
-/*
-            // Now create a new client based on the credentials of the caller assuming the role.
-            var client2 = new AmazonSecurityTokenServiceClient(credentials: assumeRoleRes.Credentials);
+            //var assumeRoleRes = stsClient.AssumeRoleAsync(assumeRoleReq).Result;
 
-            // Get and display information about the caller that has assumed the defined role.
-            var caller2 = client2.GetCallerIdentityAsync(callerIdRequest).Result;
-            Console.WriteLine($"AssumedRole Caller: {caller2.Arn}");
-*/
+            /*
+                        // Now create a new client based on the credentials of the caller assuming the role.
+                        var client2 = new AmazonSecurityTokenServiceClient(credentials: assumeRoleRes.Credentials);
+
+                        // Get and display information about the caller that has assumed the defined role.
+                        var caller2 = client2.GetCallerIdentityAsync(callerIdRequest).Result;
+                        Console.WriteLine($"AssumedRole Caller: {caller2.Arn}");
+            */
 
             var config = new AmazonDynamoDBConfig()
             {
                 RegionEndpoint = RegionEndpoint.USEast1,
-                AllowAutoRedirect = true          
-                
+                AllowAutoRedirect = true                 
             };
 
-            var client = new AmazonDynamoDBClient(assumeRoleRes.Credentials, config);
+            //var client = new AmazonDynamoDBClient(assumeRoleRes.Credentials, config);
+            var client = new AmazonDynamoDBClient(assumeRoleRes, config);
 
             //Working
             //var client = new AmazonDynamoDBClient(LoadSsoCredentials(), config);
