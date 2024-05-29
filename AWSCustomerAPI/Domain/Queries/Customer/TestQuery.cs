@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 
 namespace AWSCustomerAPI.Queries
 {
-    public class CustomerGetAllQuery : IRequest<MultiResponseWrapper>
+    public class TestQuery : IRequest<SingleResponseWrapper>
     {
-        public CustomerGetAllQuery()
+        public TestQuery()
         {
 
         }

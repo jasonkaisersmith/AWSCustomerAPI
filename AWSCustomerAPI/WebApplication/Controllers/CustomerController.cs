@@ -33,7 +33,7 @@ namespace AWSCustomerAPI.Controllers
                     Ok(result.ResponseObject),
                 _ => BadRequest(result.ErrorMessage),
             };
-        }*/
+        }*/       
 
         [HttpGet("{id}")]
         public async Task<ActionResult<CustomerResponse>> GetById(Guid id)

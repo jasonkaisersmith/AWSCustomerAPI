@@ -14,39 +14,7 @@ namespace AWSCustomerAPI.Installers
     public class DbInstaller : IInstaller
     {
         public void InstallServices(IServiceCollection services, IConfiguration configuration)
-        {
-
-            #region DO NOT DELETE, only comment out.
-            /*
-            string AWS_ACCESS_KEY_ID = "AKIAUU7QCJEYMU7JWHZV";
-            string AWS_SECRET_ACCESS_KEY = "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";
-
-            var credentials = new BasicAWSCredentials(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY);
-
-            /*   var awsOptions = configuration.GetAWSOptions();
-               //awsOptions.Credentials = new EnvironmentVariablesAWSCredentials();
-               services.AddDefaultAWSOptions(awsOptions);
-            
-
-            AWSOptions awsOptions = new AWSOptions
-            {
-                Credentials = credentials,
-                Region = RegionEndpoint.EUWest1,        
-                //SessionRoleArn = "arn:aws:iam::319941658928:user/jason"
-            };
-            services.AddDefaultAWSOptions(awsOptions);
-            /*
-            var stsClient = new AmazonSecurityTokenServiceClient(credentials, RegionEndpoint.EUWest1);
-            var getSessionTokenRequest = new GetSessionTokenRequest
-            {
-                DurationSeconds = 3600 // 1 hour
-            };
-            /*
-            var resp2 = stsClient.GetCallerIdentityAsync(new GetCallerIdentityRequest()).Result;
-            var resp = stsClient.GetSessionTokenAsync(getSessionTokenRequest).Result;
-            */
-            #endregion
-
+        {            
             var roleArnToAssume = "arn:aws:iam::319941658928:role/JasonRole_AppDynamoDbAccess";
             var stsClient = new AmazonSecurityTokenServiceClient(LoadSsoCredentials(), RegionEndpoint.EUWest1);
 
