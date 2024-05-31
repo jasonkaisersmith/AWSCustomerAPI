@@ -14,7 +14,56 @@ namespace AWSCustomerAPI.Installers
 {
     public class DbInstaller : IInstaller
     {
+
         public void InstallServices(IServiceCollection services, IConfiguration configuration)
+        {
+            var roleArnToAssume = "arn:aws:iam::319941658928:role/JasonRole_AppDynamoDbAccess";
+            var ssoCredentials = LoadSsoCredentials();
+
+            // Using AssumeRoleAWSCredentials to automatically refresh the credentials
+            var assumeRoleCredentials = new AssumeRoleAWSCredentials(
+                ssoCredentials,
+                roleArnToAssume,
+                "Session1"
+            );
+
+            var awsOptions = configuration.GetAWSOptions();
+            awsOptions.Credentials = assumeRoleCredentials;
+            awsOptions.Region = RegionEndpoint.USEast1;
+            services.AddDefaultAWSOptions(awsOptions);
+
+            var dbConfig = new AmazonDynamoDBConfig
+            {
+                RegionEndpoint = RegionEndpoint.USEast1,
+                AllowAutoRedirect = true
+            };
+
+            var client = new AmazonDynamoDBClient(assumeRoleCredentials, dbConfig);
+
+            services.AddSingleton<IAmazonDynamoDB>(client);
+            services.AddScoped<ICustomerRepository, CustomerRepository>();
+
+            services.AddLogging(loggingBuilder =>
+            {
+                loggingBuilder.AddConsole();
+                loggingBuilder.AddDebug();
+            });
+        }
+
+        static AWSCredentials LoadSsoCredentials()
+        {
+            var chain = new CredentialProfileStoreChain();
+            if (chain.TryGetAWSCredentials("319941658928_SSO-Consumer-admin", out var credentials))
+                return credentials;
+            else
+            {
+                var defaultCreds = FallbackCredentialsFactory.GetCredentials();
+                return defaultCreds ?? throw new Exception("Failed to find the profile");
+            }
+        }
+
+
+        public void oldInstallServices(IServiceCollection services, IConfiguration configuration)
         {        
             var roleArnToAssume = "arn:aws:iam::319941658928:role/JasonRole_AppDynamoDbAccess";
             var stsClient = new AmazonSecurityTokenServiceClient(LoadSsoCredentials(), RegionEndpoint.EUWest1);
@@ -84,7 +133,7 @@ namespace AWSCustomerAPI.Installers
 
         }
 
-        static AWSCredentials LoadSsoCredentials()
+        static AWSCredentials oldLoadSsoCredentials()
         {
             var chain = new CredentialProfileStoreChain();
             if (chain.TryGetAWSCredentials("319941658928_SSO-Consumer-admin", out var credentials))
